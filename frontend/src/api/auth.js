@@ -17,6 +17,13 @@ export function login({ email, password }) {
   );
 }
 
+export function loginWithGoogle(credential) {
+  return request(
+    () => http.post('/auth/google', { credential }),
+    mockAuth.login
+  );
+}
+
 export function fetchProfile() {
   return request(
     () => http.get('/auth/me'),

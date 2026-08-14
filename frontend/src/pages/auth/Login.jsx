@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import AuthShell from './AuthShell.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('demo.analyst@enterprise-console.io');
@@ -12,6 +13,22 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
+
+  async function handleGoogleSuccess(credentialResponse) {
+    setSubmitting(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const { source, error: srcError } = await loginWithGoogle(credentialResponse.credential);
+      if (source === 'mock') setNotice(`Signed in with demo data — ${srcError}`);
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Unable to sign in with Google');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,11 +53,26 @@ export default function Login() {
       <p className="sub">Access the unified backtesting, analytics and retail intelligence console.</p>
 
       {error && <div className="auth-error">{error}</div>}
+<<<<<<< HEAD
       {notice && (
         <div className="badge badge-warning" style={{ marginBottom: 16, display: 'flex', padding: '8px 12px' }}>
           {notice}
         </div>
       )}
+=======
+      {notice && <div className="badge badge-warning" style={{ marginBottom: 16 }}>{notice}</div>}
+      
+      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => setError('Google sign in failed')}
+        />
+      </div>
+      
+      <div className="auth-divider">
+        <span>OR</span>
+      </div>
+>>>>>>> 11f40e270d381b20b18f4d071257cbb008b3f56e
 
       <form onSubmit={handleSubmit} className="flex-col gap-4">
         <div className="field">
