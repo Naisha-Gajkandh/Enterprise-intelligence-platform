@@ -15,12 +15,16 @@ const TITLES = {
   '/settings': 'Settings'
 };
 
+const DISPLAY_NAME = 'Nishra Gajkandh';
+
 export default function Topbar({ onMenuClick }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const title = TITLES[location.pathname] || 'Console';
-  const initials = (user?.full_name || user?.email || 'U')
+
+  const name = user?.full_name || DISPLAY_NAME;
+  const initials = name
     .split(' ')
     .map((s) => s[0])
     .join('')
@@ -33,15 +37,35 @@ export default function Topbar({ onMenuClick }) {
         <button className="topbar-menu-btn" onClick={onMenuClick} aria-label="Open navigation">
           ☰
         </button>
-        <span className="topbar-crumb">Enterprise Intelligence Console / {title}</span>
+        <span className="topbar-crumb">
+          Enterprise Intelligence Console&ensp;/&ensp;{title}
+        </span>
       </div>
+
       <div className="topbar-right">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="topbar-status-dot" title="All systems operational" />
+          <span style={{ fontSize: 11.5, color: 'var(--text-muted)', letterSpacing: '0.005em' }}>
+            Live
+          </span>
+        </div>
+
+        <div className="topbar-divider" />
+
         <div className="topbar-user">
           <div className="topbar-avatar">{initials}</div>
-          <span>{user?.full_name || user?.email}</span>
+          <div>
+            <div className="topbar-user-name">{name}</div>
+            <div className="topbar-user-role">
+              {user?.role || 'Analyst'} · Enterprise Intelligence
+            </div>
+          </div>
         </div>
+
+        <div className="topbar-divider" />
+
         <button
-          className="btn btn-ghost btn-sm"
+          className="topbar-signout"
           onClick={() => {
             logout();
             navigate('/login');

@@ -33,9 +33,15 @@ export default function Login() {
   return (
     <AuthShell>
       <h2>Sign in</h2>
-      <p className="sub">Access the unified backtesting, analytics and retail assistant console.</p>
+      <p className="sub">Access the unified backtesting, analytics and retail intelligence console.</p>
+
       {error && <div className="auth-error">{error}</div>}
-      {notice && <div className="badge badge-warning" style={{ marginBottom: 16 }}>{notice}</div>}
+      {notice && (
+        <div className="badge badge-warning" style={{ marginBottom: 16, display: 'flex', padding: '8px 12px' }}>
+          {notice}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex-col gap-4">
         <div className="field">
           <label htmlFor="email">Work email</label>
@@ -62,13 +68,15 @@ export default function Login() {
             autoComplete="current-password"
           />
         </div>
-        <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
+        <button className="btn btn-primary btn-block" type="submit" disabled={submitting} style={{ marginTop: 4 }}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+
       <div className="auth-switch">
         No account? <Link to="/register">Create one</Link>
       </div>
+
       <div className="demo-hint">
         Demo mode: if <span className="num">/api/v1/auth/login</span> is unreachable, the console signs you in
         with representative data so every module stays explorable.

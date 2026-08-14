@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '../components/common/Card.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { config } from '../api/config.js';
 
 export default function Settings() {
-  const { user } = useAuth();
-  const [copied, setCopied] = useState(false);
+  const { user, logout } = useAuth();
 
-  function copyBaseUrl() {
-    navigator.clipboard?.writeText(config.apiBaseUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
+  const name = user?.full_name || 'Nishra Gajkandh';
+  const email = user?.email || '—';
+  const role = user?.role || 'Analyst';
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : 'Enterprise Intelligence';
 
   return (
     <div>
@@ -19,33 +18,42 @@ export default function Settings() {
         <div>
           <span className="page-eyebrow">Platform</span>
           <h1>Settings</h1>
-          <p className="page-subtitle">Account details and the API configuration this console is currently using.</p>
+          <p className="page-subtitle">Your account details and personal preferences.</p>
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        <Card title="Account">
-          <div className="flex-col gap-3">
-            <SettingRow label="Name" value={user?.full_name || '—'} />
-            <SettingRow label="Email" value={user?.email || '—'} />
-            <SettingRow label="Role" value={user?.role || 'analyst'} />
+      <div style={{ maxWidth: 680 }}>
+        <Card title="Account" subtitle="Your profile on the Enterprise Intelligence Console">
+          <div className="flex-col gap-0">
+            <SettingRow label="Full name" value={name} />
+            <SettingRow label="Email address" value={email} mono />
+            <SettingRow label="Role" value={role} />
+            <SettingRow label="Member since" value={memberSince} />
           </div>
         </Card>
 
-        <Card title="API configuration" subtitle="Read from environment variables at build time" actions={
-          <button className="btn btn-secondary btn-sm" onClick={copyBaseUrl}>{copied ? 'Copied' : 'Copy base URL'}</button>
-        }>
-          <div className="flex-col gap-3">
-            <SettingRow label="Base URL" value={config.apiBaseUrl} mono />
-            <SettingRow label="API prefix" value={config.apiPrefix} mono />
-            <SettingRow label="Request timeout" value={`${config.timeoutMs} ms`} mono />
-            <SettingRow label="Force mock mode" value={config.forceMock ? 'Enabled' : 'Disabled'} />
-          </div>
-          <p className="text-xs text-muted mt-3">
-            Update VITE_API_BASE_URL, VITE_API_PREFIX, VITE_API_TIMEOUT_MS and VITE_FORCE_MOCK in your .env file, then
-            rebuild — see .env.example.
-          </p>
-        </Card>
+        <div style={{ marginTop: 20 }}>
+          <Card title="Session">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                  Sign out of this console
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+                  Your session data will be cleared from this browser.
+                </div>
+              </div>
+              <a
+                href="/login"
+                className="btn btn-secondary btn-sm"
+                onClick={(e) => { e.preventDefault(); logout(); window.location.href = '/login'; }}
+                style={{ flexShrink: 0 }}
+              >
+                Sign out
+              </a>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
@@ -53,9 +61,24 @@ export default function Settings() {
 
 function SettingRow({ label, value, mono }) {
   return (
-    <div className="flex justify-between items-center" style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-      <span className="text-muted text-sm">{label}</span>
-      <span className={mono ? 'num text-sm' : 'text-sm'} style={{ fontWeight: 500 }}>{value}</span>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '13px 0',
+      borderBottom: '1px solid var(--border)',
+      gap: 16
+    }}>
+      <span style={{ fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 500 }}>{label}</span>
+      <span style={{
+        fontSize: 13,
+        fontFamily: mono ? 'var(--font-mono)' : 'inherit',
+        fontWeight: 500,
+        color: 'var(--text-primary)',
+        textAlign: 'right'
+      }}>
+        {value}
+      </span>
     </div>
   );
 }
