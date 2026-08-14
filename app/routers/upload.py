@@ -176,6 +176,7 @@ def _ingest_native_schema(df: pd.DataFrame, col_map: dict, db: Session) -> dict:
             product_map[str(cat)] = p.id
 
     count = 0
+    transaction_dicts = []
     for _, row in df.iterrows():
         try:
             order_date = date.today()
@@ -198,17 +199,25 @@ def _ingest_native_schema(df: pd.DataFrame, col_map: dict, db: Session) -> dict:
             revenue = float(row[rev_col]) if rev_col and pd.notna(row.get(rev_col)) else 0.0
             quantity = int(row[qty_col]) if qty_col and pd.notna(row.get(qty_col)) else 1
 
-            db.add(models.Transaction(
-                order_date=order_date,
-                product_id=product_id,
-                category=cat,
-                quantity=quantity,
-                revenue=revenue,
-            ))
+            transaction_dicts.append({
+                "order_date": order_date,
+                "product_id": product_id,
+                "category": cat,
+                "quantity": quantity,
+                "revenue": revenue,
+            })
             count += 1
+            
+            if len(transaction_dicts) >= 2000:
+                db.bulk_insert_mappings(models.Transaction, transaction_dicts)
+                transaction_dicts = []
+
         except Exception as e:
             logger.warning(f"Skipping row: {e}")
             continue
+
+    if transaction_dicts:
+        db.bulk_insert_mappings(models.Transaction, transaction_dicts)
 
     db.commit()
     return {"products": len(product_map), "transactions": count}
@@ -241,6 +250,7 @@ def _ingest_generic(df: pd.DataFrame, db: Session) -> dict:
             product_map[str(cat)] = p.id
 
     count = 0
+    transaction_dicts = []
     for _, row in df.iterrows():
         try:
             order_date = date.today()
@@ -267,23 +277,32 @@ def _ingest_generic(df: pd.DataFrame, db: Session) -> dict:
                     break
             quantity = int(row[qty_col]) if qty_col and pd.notna(row.get(qty_col)) else 1
 
-            db.add(models.Transaction(
-                order_date=order_date,
-                product_id=product_id,
-                category=cat,
-                quantity=quantity,
-                revenue=revenue,
-            ))
+            transaction_dicts.append({
+                "order_date": order_date,
+                "product_id": product_id,
+                "category": cat,
+                "quantity": quantity,
+                "revenue": revenue,
+            })
             count += 1
+            
+            if len(transaction_dicts) >= 2000:
+                db.bulk_insert_mappings(models.Transaction, transaction_dicts)
+                transaction_dicts = []
+
         except Exception as e:
+            logger.warning(f"Skipping row: {e}")
             continue
+
+    if transaction_dicts:
+        db.bulk_insert_mappings(models.Transaction, transaction_dicts)
 
     db.commit()
     return {"products": len(product_map), "transactions": count}
 
 
 @router.post("/analyze", response_model=schemas.APIResponse[dict])
-async def analyze_file(
+def analyze_file(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
@@ -303,8 +322,9 @@ async def analyze_file(
         raise HTTPException(status_code=400, detail="Invalid file format. Upload a .csv or .xlsx file.")
 
     try:
-        content = await file.read()
+        content = file.file.read()
 
+        logger.info("Step 1: Parsing file")
         # ── Step 1: Parse ───────────────────────────────────────────
         if file_ext == "csv":
             try:
@@ -318,13 +338,16 @@ async def analyze_file(
         if df.empty:
             raise HTTPException(status_code=400, detail="The uploaded file is empty.")
 
+        logger.info("Step 2: ML Preprocessing")
         # ── Step 2: ML Preprocessing (no AI) ────────────────────────
         ml_results = analyze_dataset(df)
 
+        logger.info("Step 3: Ingesting into PostgreSQL")
         # ── Step 3: Ingest into PostgreSQL ──────────────────────────
         ingestion = _ingest_into_database(df, db)
         ml_results["ingestion"] = ingestion
 
+        logger.info("Step 4: Ollama summary")
         # ── Step 4: Pass hard metrics to Ollama for summary ─────────
         # Fast socket probe: check if Ollama port is open before calling it
         ml_summary_text = format_ml_summary_for_llm(ml_results)
@@ -341,6 +364,7 @@ async def analyze_file(
 
         if ollama_available:
             try:
+                logger.info("Calling Ollama...")
                 ollama_prompt = (
                     "You are a senior business analyst. Based on the following "
                     "machine learning analysis results, write a concise executive "
@@ -349,7 +373,9 @@ async def analyze_file(
                     f"{ml_summary_text}"
                 )
                 ai_summary = analyze_data_summary(ollama_prompt)
-            except Exception:
+                logger.info("Ollama responded.")
+            except Exception as e:
+                logger.error(f"Ollama failed: {e}")
                 ollama_available = False
 
         if not ollama_available:

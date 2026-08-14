@@ -8,7 +8,7 @@ const prefix = import.meta.env.VITE_API_PREFIX || '/api/v1';
 export const config = {
   apiBaseUrl: rawBase.replace(/\/+$/, ''),
   apiPrefix: prefix.startsWith('/') ? prefix : `/${prefix}`,
-  timeoutMs: Number(import.meta.env.VITE_API_TIMEOUT_MS || 6000),
+  timeoutMs: Number(import.meta.env.VITE_API_TIMEOUT_MS || 60000),
   forceMock: String(import.meta.env.VITE_FORCE_MOCK).toLowerCase() === 'true'
 };
 
