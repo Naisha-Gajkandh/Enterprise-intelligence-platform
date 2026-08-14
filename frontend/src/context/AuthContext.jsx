@@ -67,11 +67,7 @@ export function AuthProvider({ children }) {
       logout,
       updateUser
     }),
-<<<<<<< HEAD
-    [user, isReady, lastAuthSource, login, signup, logout, updateUser]
-=======
-    [user, isReady, lastAuthSource, login, loginWithGoogle, signup, logout]
->>>>>>> 11f40e270d381b20b18f4d071257cbb008b3f56e
+    [user, isReady, lastAuthSource, login, loginWithGoogle, signup, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

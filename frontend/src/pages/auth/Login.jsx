@@ -53,13 +53,6 @@ export default function Login() {
       <p className="sub">Access the unified backtesting, analytics and retail intelligence console.</p>
 
       {error && <div className="auth-error">{error}</div>}
-<<<<<<< HEAD
-      {notice && (
-        <div className="badge badge-warning" style={{ marginBottom: 16, display: 'flex', padding: '8px 12px' }}>
-          {notice}
-        </div>
-      )}
-=======
       {notice && <div className="badge badge-warning" style={{ marginBottom: 16 }}>{notice}</div>}
       
       <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
@@ -72,7 +65,6 @@ export default function Login() {
       <div className="auth-divider">
         <span>OR</span>
       </div>
->>>>>>> 11f40e270d381b20b18f4d071257cbb008b3f56e
 
       <form onSubmit={handleSubmit} className="flex-col gap-4">
         <div className="field">
