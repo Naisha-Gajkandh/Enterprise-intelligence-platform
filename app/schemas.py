@@ -122,3 +122,13 @@ class ChatResponse(BaseModel):
     reply: str
     intent: str  # "structured_query" | "product_recommendation" | "general"
     sources: list[str] = []
+
+
+class ProductResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    name: str
+    category: str
+    price: float
+    description: str
+

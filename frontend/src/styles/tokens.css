@@ -1,0 +1,62 @@
+:root {
+  /* ---- Surfaces ---- */
+  --bg: #F5F6F8;
+  --bg-sunken: #EEF0F3;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --sidebar-bg: #0E1B30;
+  --sidebar-bg-active: #16294A;
+  --sidebar-text: #AEB9CC;
+  --sidebar-text-active: #FFFFFF;
+  --sidebar-border: #1E2E4C;
+
+  /* ---- Text ---- */
+  --text-primary: #0F1B2D;
+  --text-secondary: #4C5A6E;
+  --text-muted: #8792A2;
+  --text-inverse: #F5F7FA;
+
+  /* ---- Borders ---- */
+  --border: #E1E4EA;
+  --border-strong: #C9CFDA;
+  --border-focus: #2E5AAC;
+
+  /* ---- Accent (subtle blue) ---- */
+  --accent: #2E5AAC;
+  --accent-dark: #1F3E78;
+  --accent-soft: #EAF1FC;
+  --accent-soft-border: #C7DBF5;
+
+  /* ---- Semantic ---- */
+  --positive: #1E7B4D;
+  --positive-soft: #E7F5EC;
+  --negative: #B3261E;
+  --negative-soft: #FBEAE9;
+  --warning: #92650B;
+  --warning-soft: #FBF1DC;
+  --neutral-soft: #EEF0F3;
+
+  /* ---- Type ---- */
+  --font-ui: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* ---- Scale ---- */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  --shadow-card: 0 1px 2px rgba(15, 27, 45, 0.04);
+  --shadow-pop: 0 4px 16px rgba(15, 27, 45, 0.10);
+
+  --sidebar-width: 248px;
+  --topbar-height: 60px;
+}
