@@ -21,14 +21,24 @@ from sqlalchemy import func
 
 from app import models
 
+import time
+_df_cache = {"time": 0, "df": None}
+
 def _transactions_df(db: Session) -> pd.DataFrame:
+    # Use a 10-second TTL cache so concurrent dashboard requests don't crush the DB
+    if time.time() - _df_cache["time"] < 10 and _df_cache["df"] is not None:
+        return _df_cache["df"].copy()
+
     rows = db.query(
         models.Transaction.order_date,
         models.Transaction.category,
         models.Transaction.quantity,
         models.Transaction.revenue,
     ).all()
-    return pd.DataFrame(rows, columns=["order_date", "category", "quantity", "revenue"])
+    df = pd.DataFrame(rows, columns=["order_date", "category", "quantity", "revenue"])
+    _df_cache["time"] = time.time()
+    _df_cache["df"] = df
+    return df.copy()
 
 
 def get_kpi_summary(db: Session) -> dict:
