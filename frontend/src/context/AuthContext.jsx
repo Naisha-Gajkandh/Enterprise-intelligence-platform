@@ -39,6 +39,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((patch) => {
+    setUser((prev) => {
+      const next = { ...prev, ...patch };
+      localStorage.setItem('eic_auth_user', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -47,9 +55,10 @@ export function AuthProvider({ children }) {
       lastAuthSource,
       login,
       signup,
-      logout
+      logout,
+      updateUser
     }),
-    [user, isReady, lastAuthSource, login, signup, logout]
+    [user, isReady, lastAuthSource, login, signup, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
