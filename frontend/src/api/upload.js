@@ -15,7 +15,8 @@ export async function analyzeDataset(file, onProgress) {
           if (onProgress && evt.total) onProgress(Math.round((evt.loaded / evt.total) * 100));
         }
       }),
-    () => ({ ...mockUploadAnalysis, filename: file?.name || mockUploadAnalysis.filename })
+    () => ({ ...mockUploadAnalysis, filename: file?.name || mockUploadAnalysis.filename }),
+    { disableFallback: true }
   );
 
   if (result.source === 'live' && result.data) {

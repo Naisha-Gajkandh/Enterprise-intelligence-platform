@@ -6,7 +6,8 @@ import { mockAssistantResponse } from './mock/mockData.js';
 export async function sendAssistantMessage({ message }) {
   const result = await request(
     () => http.post('/assistant/chat', { message }),
-    () => mockAssistantResponse(message)
+    () => mockAssistantResponse(message),
+    { disableFallback: true }
   );
 
   if (result.source === 'live' && result.data) {

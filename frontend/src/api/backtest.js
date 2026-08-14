@@ -23,7 +23,8 @@ export async function runBacktest({ symbol, fastWindow, slowWindow, transactionC
         slow_window: slowWindow,
         transaction_cost_pct: transactionCostPct
       }
-    })
+    }),
+    { disableFallback: true }
   );
 
   if (result.source === 'live' && result.data?.summary) {

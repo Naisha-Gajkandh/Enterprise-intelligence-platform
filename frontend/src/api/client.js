@@ -54,7 +54,7 @@ function unwrapEnvelope(payload) {
  * @param {*} mockData - value or function returning the mock payload
  * @returns {Promise<{data: *, source: 'live'|'mock', error?: string}>}
  */
-export async function request(liveCall, mockData) {
+export async function request(liveCall, mockData, options = {}) {
   if (config.forceMock) {
     return { data: resolveMock(mockData), source: 'mock' };
   }
@@ -63,7 +63,7 @@ export async function request(liveCall, mockData) {
     return { data: unwrapEnvelope(res.data), source: 'live' };
   } catch (err) {
     const reason = describeError(err);
-    if (err.response && err.response.status >= 400 && err.response.status < 500) {
+    if (options.disableFallback || (err.response && err.response.status >= 400 && err.response.status < 500)) {
       const errMsg = err.response.data?.error?.message || reason;
       throw new Error(errMsg);
     }
