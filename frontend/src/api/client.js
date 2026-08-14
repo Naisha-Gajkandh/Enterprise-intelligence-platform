@@ -64,7 +64,7 @@ export async function request(liveCall, mockData, options = {}) {
   } catch (err) {
     const reason = describeError(err);
     if (options.disableFallback || (err.response && err.response.status >= 400 && err.response.status < 500)) {
-      const errMsg = err.response.data?.error?.message || reason;
+      const errMsg = err.response?.data?.error?.message || reason;
       throw new Error(errMsg);
     }
     return { data: resolveMock(mockData), source: 'mock', error: reason };

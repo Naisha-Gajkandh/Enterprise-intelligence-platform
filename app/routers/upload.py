@@ -77,27 +77,33 @@ def _ingest_sales_schema(df: pd.DataFrame, col_map: dict, db: Session) -> dict:
     product_map = {}  # productcode -> product_id
     if prod_code_col:
         unique_products = df.drop_duplicates(subset=[prod_code_col])
+        products_to_add = []
         for _, row in unique_products.iterrows():
             code = str(row.get(prod_code_col, "Unknown"))
             category = str(row.get(prod_line_col, "Other")) if prod_line_col else "Other"
             price = float(row[price_col]) if price_col and pd.notna(row.get(price_col)) else 0.0
             description = str(row.get(desc_col, f"Product {code}")) if desc_col else f"Product {code}"
 
-            product = models.Product(
+            p = models.Product(
                 name=code,
                 category=category,
                 price=price,
                 description=description,
             )
-            db.add(product)
-            db.flush()
-            product_map[code] = product.id
+            products_to_add.append(p)
+        
+        if products_to_add:
+            db.add_all(products_to_add)
+            db.commit()
+            for p in products_to_add:
+                product_map[p.name] = p.id
 
     # Insert transactions
     sales_col = orig("SALES") or orig("REVENUE") or orig("TOTAL")
     qty_col = orig("QUANTITYORDERED") or orig("QUANTITY") or orig("QTY")
     date_col = orig("ORDERDATE") or orig("ORDER_DATE") or orig("DATE")
 
+    transactions_data = []
     count = 0
     for _, row in df.iterrows():
         try:
@@ -128,19 +134,22 @@ def _ingest_sales_schema(df: pd.DataFrame, col_map: dict, db: Session) -> dict:
             revenue = float(row[sales_col]) if sales_col and pd.notna(row.get(sales_col)) else 0.0
             quantity = int(row[qty_col]) if qty_col and pd.notna(row.get(qty_col)) else 1
 
-            db.add(models.Transaction(
-                order_date=order_date,
-                product_id=product_id,
-                category=category,
-                quantity=quantity,
-                revenue=revenue,
-            ))
+            transactions_data.append({
+                "order_date": order_date,
+                "product_id": product_id,
+                "category": category,
+                "quantity": quantity,
+                "revenue": revenue,
+            })
             count += 1
         except Exception as e:
             logger.warning(f"Skipping row: {e}")
             continue
 
-    db.commit()
+    if transactions_data:
+        db.bulk_insert_mappings(models.Transaction, transactions_data)
+        db.commit()
+
     return {"products": len(product_map), "transactions": count}
 
 
@@ -161,20 +170,22 @@ def _ingest_native_schema(df: pd.DataFrame, col_map: dict, db: Session) -> dict:
 
     # Create products from unique categories or product names
     product_map = {}
+    products_to_add = []
     if prod_col:
         for name in df[prod_col].dropna().unique():
             cat = df[df[prod_col] == name][cat_col].iloc[0] if cat_col else "Other"
-            p = models.Product(name=str(name), category=str(cat), price=0, description=str(name))
-            db.add(p)
-            db.flush()
-            product_map[str(name)] = p.id
+            products_to_add.append(models.Product(name=str(name), category=str(cat), price=0, description=str(name)))
     elif cat_col:
         for cat in df[cat_col].dropna().unique():
-            p = models.Product(name=str(cat), category=str(cat), price=0, description=f"Category: {cat}")
-            db.add(p)
-            db.flush()
-            product_map[str(cat)] = p.id
+            products_to_add.append(models.Product(name=str(cat), category=str(cat), price=0, description=f"Category: {cat}"))
 
+    if products_to_add:
+        db.add_all(products_to_add)
+        db.commit()
+        for p in products_to_add:
+            product_map[p.name] = p.id
+
+    transactions_data = []
     count = 0
     for _, row in df.iterrows():
         try:
@@ -198,19 +209,22 @@ def _ingest_native_schema(df: pd.DataFrame, col_map: dict, db: Session) -> dict:
             revenue = float(row[rev_col]) if rev_col and pd.notna(row.get(rev_col)) else 0.0
             quantity = int(row[qty_col]) if qty_col and pd.notna(row.get(qty_col)) else 1
 
-            db.add(models.Transaction(
-                order_date=order_date,
-                product_id=product_id,
-                category=cat,
-                quantity=quantity,
-                revenue=revenue,
-            ))
+            transactions_data.append({
+                "order_date": order_date,
+                "product_id": product_id,
+                "category": cat,
+                "quantity": quantity,
+                "revenue": revenue,
+            })
             count += 1
         except Exception as e:
             logger.warning(f"Skipping row: {e}")
             continue
 
-    db.commit()
+    if transactions_data:
+        db.bulk_insert_mappings(models.Transaction, transactions_data)
+        db.commit()
+
     return {"products": len(product_map), "transactions": count}
 
 
@@ -233,13 +247,18 @@ def _ingest_generic(df: pd.DataFrame, db: Session) -> dict:
     cat_col = cat_cols[0] if cat_cols else None
 
     product_map = {}
+    products_to_add = []
     if cat_col:
         for cat in df[cat_col].dropna().unique()[:100]:
-            p = models.Product(name=str(cat), category=str(cat), price=0, description=str(cat))
-            db.add(p)
-            db.flush()
-            product_map[str(cat)] = p.id
+            products_to_add.append(models.Product(name=str(cat), category=str(cat), price=0, description=str(cat)))
 
+    if products_to_add:
+        db.add_all(products_to_add)
+        db.commit()
+        for p in products_to_add:
+            product_map[p.name] = p.id
+
+    transactions_data = []
     count = 0
     for _, row in df.iterrows():
         try:
@@ -267,18 +286,21 @@ def _ingest_generic(df: pd.DataFrame, db: Session) -> dict:
                     break
             quantity = int(row[qty_col]) if qty_col and pd.notna(row.get(qty_col)) else 1
 
-            db.add(models.Transaction(
-                order_date=order_date,
-                product_id=product_id,
-                category=cat,
-                quantity=quantity,
-                revenue=revenue,
-            ))
+            transactions_data.append({
+                "order_date": order_date,
+                "product_id": product_id,
+                "category": cat,
+                "quantity": quantity,
+                "revenue": revenue,
+            })
             count += 1
         except Exception as e:
             continue
 
-    db.commit()
+    if transactions_data:
+        db.bulk_insert_mappings(models.Transaction, transactions_data)
+        db.commit()
+
     return {"products": len(product_map), "transactions": count}
 
 
