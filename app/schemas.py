@@ -35,6 +35,11 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GoogleLoginRequest(BaseModel):
+    credential: str
+
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str

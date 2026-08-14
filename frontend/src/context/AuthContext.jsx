@@ -26,6 +26,14 @@ export function AuthProvider({ children }) {
     return { source, error };
   }, []);
 
+  const loginWithGoogle = useCallback(async (credential) => {
+    const { data, source, error } = await authApi.loginWithGoogle(credential);
+    setSession(data.access_token, data.user);
+    setUser(data.user);
+    setLastAuthSource(source);
+    return { source, error };
+  }, []);
+
   const signup = useCallback(async (fullName, email, password) => {
     const { data, source, error } = await authApi.signup({ full_name: fullName, email, password });
     setSession(data.access_token, data.user);
@@ -46,10 +54,11 @@ export function AuthProvider({ children }) {
       isReady,
       lastAuthSource,
       login,
+      loginWithGoogle,
       signup,
       logout
     }),
-    [user, isReady, lastAuthSource, login, signup, logout]
+    [user, isReady, lastAuthSource, login, loginWithGoogle, signup, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
